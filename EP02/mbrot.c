@@ -10,7 +10,7 @@ float c0_real, c0_image;
 float c1_real, c1_image;
 int w, h;
 char cpu_gpu[5];
-int num_threads;
+int num_threads_arg;
 char saida[256];
 
 
@@ -103,7 +103,6 @@ float *createImage() {
   float *buffer = (float *) malloc(sizeof(float) * w * h);
 
   int i, j;
-  float real, image;
   float dx = (c1_real - c0_real) / w ;
   float dy = (c1_image - c0_image) / h;
 
@@ -111,11 +110,11 @@ float *createImage() {
     application_error("createImage(): could create buffer ... ");
   }
 
-  
+  #pragma omp parallel for num_threads(num_threads_arg) private(j)
   for (i = 0; i < h; ++i) {
-    image = c0_image + dy * i;
+    float image = c0_image + dy * i;
     for (j = 0; j < w; ++j) {
-      real = c0_real + dx * j;
+      float real = c0_real + dx * j;
       buffer[i * w + j] = test_complex_number(real, image);
     }
   }
@@ -134,7 +133,7 @@ int main(int argc, char **argv) {
   || sscanf(argv[5], "%d", &w)            != 1 
   || sscanf(argv[6], "%d", &h)            != 1
   || sscanf(argv[7], "%s", cpu_gpu)       != 1 
-  || sscanf(argv[8], "%d", &num_threads)  != 1
+  || sscanf(argv[8], "%d", &num_threads_arg)  != 1
   || sscanf(argv[9], "%s", saida)         != 1) {
     application_error("Invalid Arguments ...\n");
   }
